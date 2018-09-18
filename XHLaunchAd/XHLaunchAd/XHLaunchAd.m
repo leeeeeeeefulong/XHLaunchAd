@@ -502,26 +502,24 @@ static  SourceType _sourceType = SourceTypeLaunchImage;
     if(!configuration.skipButtonType) configuration.skipButtonType = SkipTypeTimeText;//默认
     __block NSInteger duration = 5;//默认
     if(configuration.duration) duration = configuration.duration;
-    if(configuration.skipButtonType == SkipTypeRoundProgressTime || configuration.skipButtonType == SkipTypeRoundProgressText){
+    if(configuration.skipButtonType == SkipTypeRoundProgressTime || configuration.skipButtonType == SkipTypeRoundProgressText) {
         [_skipButton startRoundDispathTimerWithDuration:duration];
     }
     NSTimeInterval period = 1.0;
-    _skipTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    _skipTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
     dispatch_source_set_timer(_skipTimer, dispatch_walltime(NULL, 0), period * NSEC_PER_SEC, 0);
     dispatch_source_set_event_handler(_skipTimer, ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            if ([self.delegate respondsToSelector:@selector(xhLaunchAd:customSkipView:duration:)]) {
-                [self.delegate xhLaunchAd:self customSkipView:configuration.customSkipView duration:duration];
-            }
-            if(!configuration.customSkipView){
-                [_skipButton setTitleWithSkipType:configuration.skipButtonType duration:duration];
-            }
-            if(duration==0){
-                DISPATCH_SOURCE_CANCEL_SAFE(_skipTimer);
-                [self removeAndAnimate]; return ;
-            }
-            duration--;
-        });
+        if ([self.delegate respondsToSelector:@selector(xhLaunchAd:customSkipView:duration:)]) {
+            [self.delegate xhLaunchAd:self customSkipView:configuration.customSkipView duration:duration];
+        }
+        if(!configuration.customSkipView){
+            [_skipButton setTitleWithSkipType:configuration.skipButtonType duration:duration];
+        }
+        if(duration==0){
+            DISPATCH_SOURCE_CANCEL_SAFE(_skipTimer);
+            [self removeAndAnimate]; return ;
+        }
+        duration--;
     });
     dispatch_resume(_skipTimer);
 }
